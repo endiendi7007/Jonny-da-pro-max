@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Royale: Arena</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a3a, #0d1824);
+            color: #e0e0e0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #uiOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        #mainMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 20, 30, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 3;
+            transition: opacity 0.5s;
+        }
+
+        #characterCustomization {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 25, 35, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 4;
+        }
+
+        .gameTitle {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            background: linear-gradient(45deg, #ff8a00, #e52e71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(229, 46, 113, 0.5);
+        }
+
+        .menuButton {
+            background: linear-gradient(45deg, #ff8a00, #e52e71);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(229, 46, 113, 0.4);
+            pointer-events: auto;
+        }
+
+        .menuButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(229, 46, 113, 0.6);
+        }
+
+        .menuButton:active {
+            transform: translateY(1px);
+        }
+
+        .customizationPanel {
+            background: rgba(30, 40, 50, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .panelTitle {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #ff8a00;
+        }
+
+        .customizationOption {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        .optionLabel {
+            font-size: 1.2rem;
+            color: #e0e0e0;
+        }
+
+        .optionControl {
+            display: flex;
+            align-items: center;
+        }
+
+        .optionButton {
+            background: #2a3a4a;
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .optionValue {
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .colorPicker {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .characterPreview {
+            width: 200px;
+            height: 300px;
+            background: rgba(40, 50, 60, 0.7);
+            border-radius: 10px;
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #888;
+            font-style: italic;
+        }
+
+        .hudElement {
+            position: absolute;
+            background: rgba(20, 30, 40, 0.7);
+            border-radius: 5px;
+            padding: 10px;
+            pointer-events: auto;
+        }
+
+        #healthBar {
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #healthFill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #e52e71, #ff8a00);
+            transition: width 0.3s;
+        }
+
+        #ammoCounter {
+            bottom: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        #miniMap {
+            top: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(20, 30, 40, 0.8);
+            border: 2px solid #ff8a00;
+        }
+
+        #gameInfo {
+            top: 20px;
+            left: 20px;
+            font-size: 1.1rem;
+        }
+
+        #killFeed {
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 250px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .killMessage {
+            background: rgba(229, 46, 113, 0.3);
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        #weaponSelector {
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .weaponIcon {
+            width: 50px;
+            height: 50px;
+            background: rgba(40, 50, 60, 0.7);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .weaponIcon.active {
+            border: 2px solid #ff8a00;
+            transform: scale(1.1);
+        }
+
+        .weaponIcon:hover {
+            background: rgba(60, 70, 80, 0.7);
+        }
+
+        .tabContainer {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #2a3a4a;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+
+        .tab.active {
+            background: #ff8a00;
+            color: white;
+        }
+
+        .tabContent {
+            display: none;
+        }
+
+        .tabContent.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="uiOverlay">
+            <div id="healthBar" class="hudElement">
+                <div id="healthFill"></div>
+            </div>
+            <div id="ammoCounter" class="hudElement">
+                <div>AK47</div>
+                <div>30 / 90</div>
+            </div>
+            <div id="miniMap" class="hudElement"></div>
+            <div id="gameInfo" class="hudElement">
+                <div>Players: 42/50</div>
+                <div>Zone: 200m</div>
+                <div>Kills: 3</div>
+            </div>
+            <div id="killFeed" class="hudElement">
+                <div class="killMessage">Player1 eliminated Player2</div>
+                <div class="killMessage">Player3 eliminated Player4</div>
+                <div class="killMessage">You eliminated Player5</div>
+            </div>
+            <div id="weaponSelector" class="hudElement">
+                <div class="weaponIcon active">AK</div>
+                <div class="weaponIcon">SG</div>
+                <div class="weaponIcon">SN</div>
+                <div class="weaponIcon">GL</div>
+                <div class="weaponIcon">ME</div>
+            </div>
+        </div>
+        
+        <div id="mainMenu">
+            <h1 class="gameTitle">Battle Royale: Arena</h1>
+            <button class="menuButton" id="playButton">Play Game</button>
+            <button class="menuButton" id="customizeButton">Customize Character</button>
+            <button class="menuButton" id="settingsButton">Settings</button>
+            <button class="menuButton" id="quitButton">Quit</button>
+        </div>
+        
+        <div id="characterCustomization">
+            <h1 class="gameTitle">Character Customization</h1>
+            
+            <div class="tabContainer">
+                <div class="tab active" data-tab="appearance">Appearance</div>
+                <div class="tab" data-tab="outfits">Outfits</div>
+                <div class="tab" data-tab="weapons">Weapons</div>
+            </div>
+            
+            <div class="customizationPanel">
+                <div class="tabContent active" id="appearanceTab">
+                    <h2 class="panelTitle">Appearance</h2>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Skin Tone</span>
+                        <div class="optionControl">
+                            <input type="color" class="colorPicker" value="#f0d0b0">
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Hair Style</span>
+                        <div class="optionControl">
+                            <button class="optionButton">←</button>
+                            <span class="optionValue">Style 3</span>
+                            <button class="optionButton">→</button>
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Hair Color</span>
+                        <div class="optionControl">
+                            <input type="color" class="colorPicker" value="#8b4513">
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Eye Color</span>
+                        <div class="optionControl">
+                            <input type="color" class="colorPicker" value="#1e90ff">
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Height</span>
+                        <div class="optionControl">
+                            <button class="optionButton">-</button>
+                            <span class="optionValue">Medium</span>
+                            <button class="optionButton">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Build</span>
+                        <div class="optionControl">
+                            <button class="optionButton">-</button>
+                            <span class="optionValue">Athletic</span>
+                            <button class="optionButton">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tabContent" id="outfitsTab">
+                    <h2 class="panelTitle">Outfits</h2>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Headgear</span>
+                        <div class="optionControl">
+                            <button class="optionButton">←</button>
+                            <span class="optionValue">None</span>
+                            <button class="optionButton">→</button>
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Vest</span>
+                        <div class="optionControl">
+                            <button class="optionButton">←</button>
+                            <span class="optionValue">Level 2</span>
+                            <button class="optionButton">→</button>
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Backpack</span>
+                        <div class="optionControl">
+                            <button class="optionButton">←</button>
+                            <span class="optionValue">Level 1</span>
+                            <button class="optionButton">→</button>
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Outfit</span>
+                        <div class="optionControl">
+                            <button class="optionButton">←</button>
+                            <span class="optionValue">Urban Camo</span>
+                            <button class="optionButton">→</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tabContent" id="weaponsTab">
+                    <h2 class="panelTitle">Weapon Skins</h2>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">AK47</span>
+                        <div class="optionControl">
+                            <button class="optionButton">←</button>
+                            <span class="optionValue">Gold</span>
+                            <button class="optionButton">→</button>
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Shotgun</span>
+                        <div class="optionControl">
+                            <button class="optionButton">←</button>
+                            <span class="optionValue">Default</span>
+                            <button class="optionButton">→</button>
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Sniper</span>
+                        <div class="optionControl">
+                            <button class="optionButton">←</button>
+                            <span class="optionValue">Woodland</span>
+                            <button class="optionButton">→</button>
+                        </div>
+                    </div>
+                    
+                    <div class="customizationOption">
+                        <span class="optionLabel">Grenade Launcher</span>
+                        <div class="optionControl">
+                            <button class="optionButton">←</button>
+                            <span class="optionValue">Default</span>
+                            <button class="optionButton">→</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="characterPreview">
+                    Character Preview
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="menuButton" id="saveCharacter">Save Character</button>
+                    <button class="menuButton" id="backToMenu">Back to Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentScreen: 'menu', // menu, game, customization
+            player: {
+                health: 100,
+                maxHealth: 100,
+                position: { x: 0, y: 0, z: 0 },
+                rotation: { x: 0, y: 0 },
+                weapons: ['AK47', 'Shotgun', 'Sniper', 'Grenade Launcher', 'Melee'],
+                currentWeapon: 0,
+                ammo: {
+                    AK47: { current: 30, total: 90 },
+                    Shotgun: { current: 8, total: 24 },
+                    Sniper: { current: 5, total: 20 },
+                    'Grenade Launcher': { current: 1, total: 3 },
+                    Melee: { current: 1, total: 1 }
+                },
+                kills: 3
+            },
+            game: {
+                players: 42,
+                maxPlayers: 50,
+                zoneRadius: 200,
+                timeLeft: 1200 // 20 minutes in seconds
+            },
+            character: {
+                skinTone: '#f0d0b0',
+                hairStyle: 3,
+                hairColor: '#8b4513',
+                eyeColor: '#1e90ff',
+                height: 'medium',
+                build: 'athletic',
+                headgear: 'none',
+                vest: 'level2',
+                backpack: 'level1',
+                outfit: 'urban_camo',
+                weaponSkins: {
+                    AK47: 'gold',
+                    Shotgun: 'default',
+                    Sniper: 'woodland',
+                    'Grenade Launcher': 'default'
+                }
+            }
+        };
+
+        // DOM Elements
+        const gameCanvas = document.getElementById('gameCanvas');
+        const mainMenu = document.getElementById('mainMenu');
+        const characterCustomization = document.getElementById('characterCustomization');
+        const playButton = document.getElementById('playButton');
+        const customizeButton = document.getElementById('customizeButton');
+        const saveCharacterButton = document.getElementById('saveCharacter');
+        const backToMenuButton = document.getElementById('backToMenu');
+        const healthFill = document.getElementById('healthFill');
+        const ammoCounter = document.getElementById('ammoCounter');
+        const gameInfo = document.getElementById('gameInfo');
+        const weaponIcons = document.querySelectorAll('.weaponIcon');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tabContent');
+
+        // Initialize WebGL context
+        const gl = gameCanvas.getContext('webgl') || gameCanvas.getContext('experimental-webgl');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            gameCanvas.width = window.innerWidth;
+            gameCanvas.height = window.innerHeight;
+            
+            if (gl) {
+                gl.viewport(0, 0, gameCanvas.width, gameCanvas.height);
+            }
+        }
+        
+        // Initialize the game
+        function init() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Set up event listeners
+            playButton.addEventListener('click', startGame);
+            customizeButton.addEventListener('click', showCustomization);
+            saveCharacterButton.addEventListener('click', saveCharacter);
+            backToMenuButton.addEventListener('click', backToMenu);
+            
+            // Weapon selection
+    
